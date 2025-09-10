@@ -6,6 +6,7 @@ use Model\ProdottoRepository;
 use Psr\Container\ContainerInterface;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
+use Util\Authenticator;
 
 class AdminController{
 
@@ -105,5 +106,17 @@ class AdminController{
         $response = $response->withStatus(302);
         //il metodo withHeader con chiave Location indica dove avviene la ridirezione
         return $response->withHeader('Location', BASE_PATH . '/pannelloAdmin');
+    }
+
+    public function login(Request $request, Response $response, array $args): Response{
+        $engine = $this->container->get('template');
+        $response->getBody()->write($engine->render('login'));
+        return $response;
+    }
+
+    public function logout(Request $request, Response $response, array $args): Response{
+        Authenticator::logout();
+        $response = $response->withStatus(302);
+        return $response->withHeader('Location', BASE_PATH . '/elenco');
     }
 }

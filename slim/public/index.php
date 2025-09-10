@@ -7,6 +7,9 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Util\Authenticator;
+
 require '../vendor/autoload.php';
 require_once '../conf/config.php';
 
@@ -25,6 +28,43 @@ $container->set('template', function (){
 });
 
 $container->set('images', IMAGES);
+
+//Gestione del middleware di autenticazione
+
+$authMiddleware = function(Request $request, RequestHandler $handler) use ($app): Response {
+
+    $routeName = $request->getUri()->getPath();
+
+    // Route della parte pubblica
+    $publicRoute = BASE_PATH . '/elenco';
+
+    //Se è una route pubblica non fa nulla
+    if (str_starts_with($routeName, $publicRoute)) {
+        return $handler->handle($request);
+    }
+
+    $user = Authenticator::getUser();
+
+    if ($routeName === BASE_PATH . '/login') {
+        return $handler->handle($request);
+    }
+    if ($user !== null) {
+        //Vengono "agganciate" le informazioni sul nome
+        $request = $request->withAttribute('user', $user);
+        return $handler->handle($request);
+    }
+    else{
+        throw new HttpUnauthorizedException($request);
+    }
+
+};
+
+$app->add($authMiddleware);
+
+$app->addRoutingMiddleware();
+
+
+
 
 // Define Custom Error Handler
 $customErrorHandler = function (
@@ -117,6 +157,15 @@ $app->get('/pannelloAdmin/prodotto/{id}/update', AdminController::class . ':form
 
 $app->post('/pannelloAdmin/prodotto/{id}/update', AdminController::class . ':aggiornaProdotto');
 
-$app->get('/negozio/prodotto[/{id}]', ProdottoController::class . ':showProdotto');
+$app->get('/elenco/prodotto[/{id}]', ProdottoController::class . ':showProdotto');
+
+//Parte per l'autenticazione
+
+$app->get('/login', AdminController::class . ':login');
+
+$app->post('/auth', AdminController::class . ':listAll');
+
+$app->get('/logout', AdminController::class . ':logout');
+
 
 $app->run();
