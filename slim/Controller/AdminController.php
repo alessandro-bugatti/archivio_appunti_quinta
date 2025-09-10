@@ -44,9 +44,21 @@ class AdminController{
     public function aggiungiProdotto(Request $request, Response $response, array $args): Response
     {
         //Recupera i dati inviata dalla form e li inserisce in $data
-        $data = (array)$request->getParsedBody();
-        //Passa i dati al metodo che li inserirà nel db
-        ProdottoRepository::aggiungiProdotto($data);
+        $params = (array)$request->getParsedBody();
+        //Parte per la gestione dell'immagine
+        $directory = $this->container->get('images');
+        $uploadedFiles = $request->getUploadedFiles();
+        $uploadedFile = $uploadedFiles['immagine'];
+        $name = sha1($uploadedFile->getClientFilename() . rand()) . '.jpg';
+        //Viene aggiunto il nome dell'immagine per poterla memorizzare nel DB
+        $params['image'] = $name;
+        $filename = '../' . $directory . '/' . $name;
+        if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
+            $uploadedFile->moveTo($filename);
+            //Passa i dati al metodo che li inserirà nel db
+            ProdottoRepository::add($params);
+        }
+
         //Aggiunde un header nella risposta che indica al browser che c'è stata una ridirezione
         $response = $response->withStatus(302);
         //il metodo withHeader con chiave Location indica dove avviene la ridirezione
