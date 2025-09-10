@@ -9,6 +9,6 @@
     <h2>Lista dei prodotti: <?=$genere?></h2>
     <ul>
     <?php foreach ($prodotti as $prodotto): ?>
-        <li><a href="<?=$base_path?>/negozio/prodotto/<?=$prodotto['id']?>"> <?=$prodotto['nome']?></a>: <i><?=$prodotto['descrizione']?></i></li>
+        <li><a href="<?=$base_path?>/elenco/prodotto/<?=$prodotto['id']?>"> <?=$prodotto['nome']?></a>: <i><?=$prodotto['descrizione']?></i></li>
     <?php endforeach;?>
     </ul>
